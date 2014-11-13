@@ -1,0 +1,13 @@
+dist
+cabal-dev
+*.o
+*.hi
+*.chi
+*.chs.h
+.virthualenv
+.hsenv
+.cabal-sandbox/
+cabal.sandbox.config
+
+.env
+test/oauth.token
