@@ -1,9 +1,13 @@
+{-# LANGUAGE CPP #-}
 module Network.Google.OAuth2Spec (main, spec) where
 
 import Test.Hspec
 import Network.Google.OAuth2
 
-import Control.Applicative
+#if __GLASGOW_HASKELL__ < 710
+import Control.Applicative ((<$>),(<*>))
+#endif
+
 import Data.Monoid
 import LoadEnv
 import Network.HTTP.Conduit

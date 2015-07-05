@@ -1,7 +1,9 @@
+{-# LANGUAGE CPP #-}
 module Network.Google.OAuth2
     (
     -- * Types
-      OAuth2Client(..)
+      Credentials(..)
+    , OAuth2Client(..)
     , OAuth2Code
     , OAuth2Scope
     , OAuth2Token
@@ -11,14 +13,17 @@ module Network.Google.OAuth2
     , getAccessToken
 
     -- * Lower-level steps
-    , newTokens
-    , refreshTokens
+    , newCreds
+    , refreshCreds
     , promptForCode
     , exchangeCode
     ) where
 
-import Control.Arrow (second)
+#if __GLASGOW_HASKELL__ < 710
 import Control.Applicative ((<$>),(<*>))
+#endif
+
+import Control.Arrow (second)
 import Control.Monad (mzero, void)
 import Data.Aeson
 import Data.ByteString (ByteString)
@@ -95,6 +100,17 @@ toOAuth2Tokens token RefreshResponse{..} =
         , tokenType = rTokenType
         }
 
+-- | Pairs a client and its tokens
+--
+-- This type is primarily so they can be cached together and not require access
+-- the client id when using cached tokens
+--
+data Credentials = Credentials
+    { credsClient :: OAuth2Client
+    , credsTokens :: OAuth2Tokens
+    }
+    deriving (Read, Show)
+
 -- | Get a valid access token with the given scopes
 --
 -- If given, credentials are cached in a file, thus preventing the need for any
@@ -106,29 +122,29 @@ getAccessToken :: OAuth2Client
                -> Maybe FilePath -- ^ File in which to cache the token
                -> IO OAuth2Token -- ^ Refreshed token
 getAccessToken client scopes (Just tokenFile) = do
-    cached <- cachedTokens tokenFile
-    tokens <- case cached of
-        Just t -> return t
-        Nothing -> newTokens client scopes
+    cached <- cachedValue tokenFile
+    creds <- case cached of
+        Just c -> return c
+        Nothing -> newCreds client scopes
 
-    refreshed <- refreshTokens client tokens
-    void $ cacheTokens tokenFile refreshed
+    refreshed <- refreshCreds creds
+    void $ cacheValue tokenFile refreshed
 
-    return $ accessToken refreshed
+    return $ accessToken $ credsTokens refreshed
 
 getAccessToken client scopes Nothing = do
-    tokens <- newTokens client scopes
-    refreshed <- refreshTokens client tokens
+    creds <- newCreds client scopes
+    refreshed <- refreshCreds creds
 
-    return $ accessToken refreshed
+    return $ accessToken $ credsTokens refreshed
 
 -- | Prompt the user for a verification code and exchange it for tokens
-newTokens :: OAuth2Client -> [OAuth2Scope] -> IO OAuth2Tokens
-newTokens client scopes = do
+newCreds :: OAuth2Client -> [OAuth2Scope] -> IO Credentials
+newCreds client scopes = do
     code <- promptForCode client scopes
     tokens <- exchangeCode client code
 
-    return tokens
+    return $ Credentials client tokens
 
 -- | Prompt the user for a verification code
 promptForCode :: OAuth2Client -> [OAuth2Scope] -> IO OAuth2Code
@@ -154,8 +170,8 @@ exchangeCode client code = postTokens
     ]
 
 -- | Use the refresh token to get a new access token
-refreshTokens :: OAuth2Client -> OAuth2Tokens -> IO OAuth2Tokens
-refreshTokens client tokens = do
+refreshCreds :: Credentials -> IO Credentials
+refreshCreds (Credentials client tokens) = do
     refreshed <- postTokens
         [ ("client_id", clientId client)
         , ("client_secret", clientSecret client)
@@ -163,7 +179,8 @@ refreshTokens client tokens = do
         , ("refresh_token", refreshToken tokens)
         ]
 
-    return $ toOAuth2Tokens (refreshToken tokens) refreshed
+    return $ Credentials client
+        $ toOAuth2Tokens (refreshToken tokens) refreshed
 
 postTokens :: FromJSON a => [(ByteString, String)] -> IO a
 postTokens params = do
@@ -173,16 +190,16 @@ postTokens params = do
 
     fmap unsafeDecode $ withManager $ httpLbs $ urlEncodedBody params' request
 
-cachedTokens :: FilePath -> IO (Maybe OAuth2Tokens)
-cachedTokens tokenFile = do
+cachedValue :: Read a => FilePath -> IO (Maybe a)
+cachedValue tokenFile = do
     result <- fmap (fmap reads) $ try $ readFile tokenFile
 
     return $ case result of
         Right ((t,_):_) -> Just t
         _ -> Nothing
 
-cacheTokens :: FilePath -> OAuth2Tokens -> IO OAuth2Tokens
-cacheTokens tokenFile t = fmap (const t) $ try $ writeFile tokenFile (show t)
+cacheValue :: Show a => FilePath -> a -> IO a
+cacheValue tokenFile x = fmap (const x) $ try $ writeFile tokenFile (show x)
 
 permissionUrl :: OAuth2Client -> [OAuth2Scope] -> String
 permissionUrl client scopes =
