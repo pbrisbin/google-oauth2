@@ -33,8 +33,9 @@ import Data.Monoid ((<>))
 import Network.HTTP.Conduit
     ( Response(..)
     , httpLbs
+    , newManager
     , parseUrl
-    , withManager
+    , tlsManagerSettings
     , urlEncodedBody
     )
 import Network.HTTP.Base (urlEncode)
@@ -188,7 +189,8 @@ postTokens params = do
 
     let params' = map (second C8.pack) params
 
-    fmap unsafeDecode $ withManager $ httpLbs $ urlEncodedBody params' request
+    mngr <- newManager tlsManagerSettings
+    unsafeDecode <$> httpLbs (urlEncodedBody params' request) mngr
 
 cachedValue :: Read a => FilePath -> IO (Maybe a)
 cachedValue tokenFile = do
