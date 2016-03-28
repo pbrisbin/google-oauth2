@@ -56,8 +56,8 @@ Library
   GHC-Options:          -Wall
   Exposed-Modules:      Network.Google.OAuth2
   Build-Depends:        base >= 4 && < 5
-                      , HTTP            >= 4000.2       && < 4000.3
-                      , aeson           >= 0.8          && < 0.9
+                      , HTTP            >= 4000.2       && < 4000.4
+                      , aeson           >= 0.8          && < 0.10
                       , bytestring
                       , http-conduit
   Default-Extensions:   OverloadedStrings
