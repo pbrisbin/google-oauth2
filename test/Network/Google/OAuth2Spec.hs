@@ -33,8 +33,9 @@ spec = describe "Token exchange" $ do
     it "grants access to an API" $ do
         token <- getToken $ Just "test/oauth.token"
 
-        request <- parseUrl =<< getEnv "EXAMPLE_URL"
-        response <- withManager $ httpLbs $ authorize token request
+        request <- parseUrlThrow =<< getEnv "EXAMPLE_URL"
+        manager <- newManager tlsManagerSettings
+        response <- httpLbs (authorize token request) manager
 
         responseBody response `shouldSatisfy` (not . L8.null)
 
