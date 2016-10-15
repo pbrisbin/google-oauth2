@@ -34,7 +34,7 @@ import Network.HTTP.Conduit
     ( Response(..)
     , httpLbs
     , newManager
-    , parseUrl
+    , parseUrlThrow
     , tlsManagerSettings
     , urlEncodedBody
     )
@@ -185,7 +185,7 @@ refreshCreds (Credentials client tokens) = do
 
 postTokens :: FromJSON a => [(ByteString, String)] -> IO a
 postTokens params = do
-    request <- parseUrl "https://accounts.google.com/o/oauth2/token"
+    request <- parseUrlThrow "https://accounts.google.com/o/oauth2/token"
 
     let params' = map (second C8.pack) params
 
