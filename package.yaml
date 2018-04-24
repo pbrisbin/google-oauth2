@@ -1,0 +1,37 @@
+---
+name: google-oauth2
+version: 0.3.0.0
+synopsis: Google OAuth2 token negotiation
+description: See https://github.com/pbrisbin/google-oauth2#readme
+author: Pat Brisbin <pbrisbin@gmail.com>
+maintainer: Pat Brisbin <pbrisbin@gmail.com>
+license: MIT
+github: pbrisbin/google-oauth2
+
+dependencies:
+  - base >=4 && <5
+  - bytestring
+  - hoauth2
+  - text
+
+ghc-options: -Wall
+
+library:
+  source-dirs: src
+  ghc-options: -Wall
+  dependencies:
+    - http-client-tls
+    - safe-exceptions
+    - transformers
+    - uri-bytestring
+
+tests:
+  spec:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options: -Wall
+    dependencies:
+      - google-oauth2
+      - hspec
+      - http-conduit
+      - load-env

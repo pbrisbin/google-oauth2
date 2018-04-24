@@ -1,0 +1,10 @@
+---
+- package:
+  - name: google-oauth2
+  - section:
+    - name: test:spec
+    - message:
+      - name: Weeds exported
+      - module:
+        - name: Network.Google.OAuth2Spec
+        - identifier: main
