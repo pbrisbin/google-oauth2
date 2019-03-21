@@ -13,16 +13,16 @@ module Main (main) where
 import Data.Aeson
 import Data.Semigroup ((<>))
 import Network.Google.OAuth2
-import Network.HTTP.Conduit.Simple
+import Network.HTTP.Simple
 import Network.OAuth.OAuth2
-improt Data.Text.Excoding (encodeUtf8)
+import Data.Text.Excoding (encodeUtf8)
 
 main :: IO ()
 main = do
     OAuth2Token{..} <-
       getAccessToken
-        "CLIENT_ID"
-        "CLIENT_SECRET"
+        "<CLIENT_ID>"      -- Fill with real ID.
+        "<CLIENT_SECRET>"  -- Fill with real code.
         ["https://www.googleapis.com/auth/drive"]
         (Just "path/to/credentials.cache")
 
