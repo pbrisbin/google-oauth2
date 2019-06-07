@@ -15,7 +15,7 @@ import Data.Semigroup ((<>))
 import Network.Google.OAuth2
 import Network.HTTP.Simple
 import Network.OAuth.OAuth2
-import Data.Text.Excoding (encodeUtf8)
+import Data.Text.Encoding (encodeUtf8)
 
 main :: IO ()
 main = do
