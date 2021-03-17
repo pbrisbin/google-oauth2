@@ -49,7 +49,7 @@ getAccessToken clientId clientSecret scopes mPath = do
   where
     oauth2 = OAuth2
         { oauthClientId = clientId
-        , oauthClientSecret = clientSecret
+        , oauthClientSecret = Just clientSecret
         , oauthOAuthorizeEndpoint =
             appendQueryParams
                 [ ("redirect_uri", "urn:ietf:wg:oauth:2.0:oob")
